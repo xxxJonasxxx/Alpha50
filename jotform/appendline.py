@@ -28,7 +28,8 @@ def append_values(spreadsheet_id, range_name, value_input_option, _values):
   for guides on implementing OAuth2 for the application.
   """
   # If modifying these scopes, delete the file token.json.
-  SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+  SCOPES = ["https://www.googleapis.com/auth/spreadsheets",
+          "https://www.googleapis.com/auth/contacts"]
   creds = None
   # The file token.json stores the user's access and refresh tokens, and is
   # created automatically when the authorization flow completes for the first

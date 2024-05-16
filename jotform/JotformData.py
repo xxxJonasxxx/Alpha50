@@ -4,6 +4,7 @@ import re
 import os
 import datetime
 import appendline as gapi
+import addcontact as contact
 
 #======================================================================================
 # Programa: JotformData.py
@@ -140,7 +141,11 @@ def getanswers(idForm, formName, created):
 
             # Excluye respuesta de Venezuela y Cuba 
             if dataOrdenada["País"] != "Venezuela" and dataOrdenada["País"] != "Cuba":
-                answersList.append(dataOrdenada)
+                
+                invertir = dataOrdenada['¿Cuál es tu presupuesto actual para invertir en tu salud? Hago esta pregunta para asegurarme de no hacerte perder el tiempo y determinar el nivel de asesoramiento que puedo ofrecer?']
+
+                if invertir != "" and invertir != "No estoy en condiciones de invertir" and invertir != "No me interesa invertir en mi salud" and invertir != "No quiero pagar nada" and invertir != "No quiero invertir en mi salud":
+                    answersList.append(dataOrdenada)
 
         # Carga la lista al DataFrame
         df = pd.DataFrame(answersList)
@@ -192,7 +197,37 @@ def sentgoogle(leadAnswers):
     else:
         print(f"Se generó el siguiente error --> {respond}")
         return("error")
+    
+#============================================================
+# Agregar contactos a Google Contacts
+#============================================================
 
+def addcontacts (listAnswers):
+    
+    i = 0 #Contador de Contactos Nuevos
+    
+    # Recorre cada contacto
+    for answer in listAnswers:
+        phone = answer["Teléfono"].replace("'","") #Quita el (') al inicio del número de teléfono
+        
+        # Crea la estructura
+        new_contact = {
+        "names": [
+            {"givenName": phone}
+        ],
+        "phoneNumbers":[
+            {"value":phone}
+        ]
+        }
+
+        flag = contact.main(new_contact=new_contact) #Se envía a cargar el contacto el Google Contacts 
+
+        # Si guardó el contacto agrega un contacto nuevo a la cuenta
+        if flag == "success":
+            i = i + 1
+
+
+    print(f"Se agregaron {i} contactos.")
 
 #============================================================
 # Borra las respuestas enviadas por los leads.
@@ -221,7 +256,7 @@ def main():
 
     # Ruta donde están los ID's de los formularios activos
     pathExcel = r'C:\files\jobformids.xlsx'
-    # pathExcel = r'C:\files\jobformids_test.xlsx'
+    #pathExcel = r'C:\files\jobformids_test.xlsx'
 
     # Calcula la fecha de ejecución del programa
     current_datetime = datetime.datetime.now()
@@ -241,6 +276,7 @@ def main():
         for dataList in formsIDsNames:
             for key, value in dataList.items():
                 
+                # Llama al módulo que consulta las respuestas en Jotform y devuelve id respuestas y las respuestas
                 answerlist, Answers = getanswers(key,value,formatted_datetime)
 
                 if answerlist != None:
@@ -249,12 +285,16 @@ def main():
 
         # Valida que hayan respuestas para cargar en el Google Sheet
         if leadAnswers != None:
+
             delete = sentgoogle(leadAnswers) 
 
             # Borra si confirma que se insertó en el Google Sheet
             if delete == "updated":
                 # Borra las respuesta de JotForm (Se comenta momentaneamente)
                 deleteanswers(idAnswerList)
+
+            # Agrega contactos nuevos    
+            addcontacts(leadAnswers)
         
     else:
         print("El archivo del listado de formularios válidos no existe.")
