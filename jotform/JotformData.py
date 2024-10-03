@@ -38,7 +38,7 @@ def getnameforms(formsIDs):
 
             # Carga en el diccionario los valores del id y el nombre del formulario
             formIDName = {
-                strRow: dataResponse["content"]["title"]
+                strRow: dataResponse["content"]["title"].rstrip()
             }
 
             formsIDsNames.append(formIDName) #Agrega el id y el nombre del formulario a la lista
@@ -52,6 +52,7 @@ def getnameforms(formsIDs):
 #==============================================================================
 def getanswers(idForm, formName, created):
 
+    # print(f"id form es {idForm}")
     # Obtiene el API Key de Jotform
     apikey = os.environ.get("alpha_jotformapikey")
 
@@ -86,6 +87,7 @@ def getanswers(idForm, formName, created):
         '¿Estás dispuesto a comprometerte durante los próximos seis meses invirtiendo tiempo y recursos económicos en tu salud, con el objetivo de alcanzar el mejor estado físico de tu vida?',
         '¿Cuál es tu presupuesto actual para invertir en tu salud? Hago esta pregunta para asegurarme de no hacerte perder el tiempo y determinar el nivel de asesoramiento que puedo ofrecer?',
         '¿Qué edad tienes?',
+        '¿Te gustaría hablar con nuestro equipo de asesores estratégicos con el objetivo de brindarte alternativas personalizadas y adaptadas a tus necesidades?',
         'Fecha Creación'
     ]
 
@@ -255,8 +257,8 @@ def deleteanswers(idAnswers):
 def main():
 
     # Ruta donde están los ID's de los formularios activos
-    pathExcel = r'C:\files\jobformids.xlsx'
-    #pathExcel = r'C:\files\jobformids_test.xlsx'
+    # pathExcel = r'C:\files\jobformids.xlsx'
+    pathExcel = r'C:\files\jobformids_test.xlsx'
 
     # Calcula la fecha de ejecución del programa
     current_datetime = datetime.datetime.now()
@@ -290,6 +292,7 @@ def main():
 
             # Borra si confirma que se insertó en el Google Sheet
             if delete == "updated":
+
                 # Borra las respuesta de JotForm (Se comenta momentaneamente)
                 deleteanswers(idAnswerList)
 

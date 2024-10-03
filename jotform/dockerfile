@@ -1,0 +1,56 @@
+# Download a Ubuntu Image
+FROM ubuntu:latest
+
+# Set TimeZone
+RUN apt-get update && apt-get install -y tzdata
+ENV TZ=Europe/Madrid
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# Update & Upgrade Repository
+RUN apt-get update && apt-get upgrade -y
+
+# Install Python
+RUN apt-get install -y software-properties-common \
+    && add-apt-repository ppa:deadsnakes/ppa \
+    && apt-get update \
+    && apt-get install -y python3.12 python3.12-venv python3.12-dev
+    
+# Environment Variable
+ENV alpha_googlesheetid=1daEsUwb_Gzz9D0tCaFmNOuRm4YC28KtuFRJbZCL0l60
+ENV alpha_jotformapikey=698aaf309d3b2c34592fbbaed327aa78
+
+# Install pip
+RUN python3.12 -m venv /jf
+
+
+# Install Google API dependencies
+RUN /jf/bin/pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib
+
+# Install Pandas Library
+RUN /jf/bin/pip install pandas
+
+# Install openpyxl
+RUN /jf/bin/pip install openpyxl
+
+# Copy Python Files & json files
+COPY *.py /alpha/
+COPY *.json /alpha/
+
+# Copy Excel Files
+COPY *.xlsx /alpha/files/
+
+# Execute Python's Script every 30 min
+# COPY start_script.sh /alpha/
+# RUN chmod +x /alpha/start_script.sh
+
+
+# Move to the working directory
+WORKDIR /alpha
+
+# Execute python script
+CMD ["/bin/bash", "-c", "\
+while [ $(date +%H) -lt 22 ]; do \
+    /jf/bin/python /alpha/JotformData.py; \
+    sleep 600; \
+done"]
+
