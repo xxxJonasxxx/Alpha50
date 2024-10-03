@@ -38,16 +38,20 @@ def append_values(spreadsheet_id, range_name, value_input_option, _values):
     creds = Credentials.from_authorized_user_file("token.json", SCOPES)
   # If there are no (valid) credentials available, let the user log in.
   if not creds or not creds.valid:
-    if creds and creds.expired and creds.refresh_token:
-      creds.refresh(Request())
-    else:
-      flow = InstalledAppFlow.from_client_secrets_file(
-          "client_secret_114630298739-71hmm89b9logpjv8tk41assehvtclauj.apps.googleusercontent.com.json", SCOPES
-      )
-      creds = flow.run_local_server(port=0)
-    # Save the credentials for the next run
-    with open("token.json", "w") as token:
-      token.write(creds.to_json())
+    try:
+      if creds and creds.expired and creds.refresh_token:
+        creds.refresh(Request())
+      else:
+        flow = InstalledAppFlow.from_client_secrets_file(
+            "client_secret_114630298739-71hmm89b9logpjv8tk41assehvtclauj.apps.googleusercontent.com.json", SCOPES
+        )
+        creds = flow.run_local_server(port=0)
+      # Save the credentials for the next run
+      with open("token.json", "w") as token:
+        token.write(creds.to_json())
+    except:
+      print("Existe probles con el token, es necesario autorizarlo")
+      quit()
   # pylint: disable=maybe-no-member
   try:
     service = build("sheets", "v4", credentials=creds)

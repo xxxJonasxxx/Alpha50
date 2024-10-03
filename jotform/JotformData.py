@@ -38,7 +38,7 @@ def getnameforms(formsIDs):
 
             # Carga en el diccionario los valores del id y el nombre del formulario
             formIDName = {
-                strRow: dataResponse["content"]["title"].rstrip()
+                strRow: dataResponse["content"]["title"].strip()
             }
 
             formsIDsNames.append(formIDName) #Agrega el id y el nombre del formulario a la lista
@@ -257,8 +257,8 @@ def deleteanswers(idAnswers):
 def main():
 
     # Ruta donde están los ID's de los formularios activos
-    # pathExcel = r'C:\files\jobformids.xlsx'
-    pathExcel = r'C:\files\jobformids_test.xlsx'
+    pathExcel = r'C:\files\jobformids.xlsx'
+    # pathExcel = r'C:\files\jobformids_test.xlsx'
 
     # Calcula la fecha de ejecución del programa
     current_datetime = datetime.datetime.now()
