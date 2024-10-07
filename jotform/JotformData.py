@@ -1,6 +1,7 @@
 import requests
 import pandas as pd
 import re
+from dotenv import load_dotenv
 import os
 import datetime
 import appendline as gapi
@@ -52,7 +53,6 @@ def getnameforms(formsIDs):
 #==============================================================================
 def getanswers(idForm, formName, created):
 
-    # print(f"id form es {idForm}")
     # Obtiene el API Key de Jotform
     apikey = os.environ.get("alpha_jotformapikey")
 
@@ -94,6 +94,9 @@ def getanswers(idForm, formName, created):
     # Valida que exista data que procesar
     if len (dataResponse["content"]) > 0:
         for record in dataResponse["content"]:
+
+            # Flag si cargó respuesto
+            checker = 0 
 
             # Agrega a la lista el id de la respuesta    
             idAnswerList.append(record["id"])
@@ -143,27 +146,35 @@ def getanswers(idForm, formName, created):
 
             # Excluye respuesta de Venezuela y Cuba 
             if dataOrdenada["País"] != "Venezuela" and dataOrdenada["País"] != "Cuba":
-                
-                invertir = dataOrdenada['¿Cuál es tu presupuesto actual para invertir en tu salud? Hago esta pregunta para asegurarme de no hacerte perder el tiempo y determinar el nivel de asesoramiento que puedo ofrecer?']
 
-                if invertir != "" and invertir != "No estoy en condiciones de invertir" and invertir != "No me interesa invertir en mi salud" and invertir != "No quiero pagar nada" and invertir != "No quiero invertir en mi salud":
+                # Carga la pregunta
+                invertir = dataOrdenada.get('¿Cuál es tu presupuesto actual para invertir en tu salud? Hago esta pregunta para asegurarme de no hacerte perder el tiempo y determinar el nivel de asesoramiento que puedo ofrecer?')     
+                
+                # Valida si existe la pregunta
+                if invertir:
+                
+                    if invertir != "" and invertir != "No estoy en condiciones de invertir" and invertir != "No me interesa invertir en mi salud" and invertir != "No quiero pagar nada" and invertir != "No quiero invertir en mi salud":
+                        answersList.append(dataOrdenada)
+                        checker = 1
+                else:
                     answersList.append(dataOrdenada)
+                    checker = 1
 
         # Carga la lista al DataFrame
-        df = pd.DataFrame(answersList)
-        pathFile = r'C:\Users\egarcia\Documents\Programas\Files\jotformdata.xlsx'
+        # df = pd.DataFrame(answersList)
+        # pathFile = r'C:\Users\egarcia\Documents\Programas\Files\jotformdata.xlsx'
 
-        # Evalúa si el archivo existe, si existe agrega las nuevas lineas sino crea un nuevo archivo y carga las lineas. 
-        if os.path.exists(pathFile):
-            old_df = pd.read_excel(pathFile)
-            update_df = pd.concat([old_df, df], ignore_index=True)
-            update_df.to_excel(pathFile, index=False)
+        # # Evalúa si el archivo existe, si existe agrega las nuevas lineas sino crea un nuevo archivo y carga las lineas. 
+        # if os.path.exists(pathFile):
+        #     old_df = pd.read_excel(pathFile)
+        #     update_df = pd.concat([old_df, df], ignore_index=True)
+        #     update_df.to_excel(pathFile, index=False)
             
-        else:
-            df.to_excel(pathFile,index=False) 
+        # else:
+        #     df.to_excel(pathFile,index=False) 
 
 
-        print(f"Se cargan datos del formulario {formName}.")
+        if checker == 1: print(f"Se cargan datos del formulario {formName}.") # Si cargó datos informa
         return(idAnswerList, answersList) #Retorna el listado de ids de las respuestas             
         
     else:
@@ -186,13 +197,18 @@ def sentgoogle(leadAnswers):
 
         googlesheetdata.append(data)
 
-    # Envía las respuestas al módulo que carga al Google Sheet
-    respond = gapi.append_values(
-            sheetid, #Id Google Sheets
-            "A1:R2", #Celdas
-            "USER_ENTERED",
-            googlesheetdata #Data
-        )
+    try:
+        # Envía las respuestas al módulo que carga al Google Sheet
+        respond = gapi.append_values(
+                sheetid, #Id Google Sheets
+                "A1:R2", #Celdas
+                "USER_ENTERED",
+                googlesheetdata #Data
+            )
+    except:
+        print("Error al cargar en el Google Sheet")
+        quit()
+
     if "updates" in respond:
         print(f"Se agregaron {(respond.get('updates').get('updatedCells'))} celdas.")
         return("updated")
@@ -256,10 +272,12 @@ def deleteanswers(idAnswers):
 #=======================================================
 def main():
 
-    # Ruta donde están los ID's de los formularios activos
-    pathExcel = r'C:\files\jobformids.xlsx'
-    # pathExcel = r'C:\files\jobformids_test.xlsx'
+    #Carga las variables de entorno
+    load_dotenv()
 
+    # Ruta donde están los ID's de los formularios activos
+    pathExcel = r'files/jobformids.xlsx'
+ 
     # Calcula la fecha de ejecución del programa
     current_datetime = datetime.datetime.now()
     formatted_datetime = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
@@ -287,6 +305,7 @@ def main():
 
         # Valida que hayan respuestas para cargar en el Google Sheet
         if leadAnswers != None:
+
 
             delete = sentgoogle(leadAnswers) 
 
